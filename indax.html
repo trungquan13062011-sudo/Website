@@ -1,0 +1,467 @@
+<!doctype html>
+
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8" />
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Trò chơi Hóc Búa - Trung Quan</title>
+
+  <style>
+
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--glass: rgba(255,255,255,0.03)}
+
+    *{box-sizing:border-box;font-family:Inter, system-ui, Arial, sans-serif}
+
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#071024 0%, #07172a 60%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:24px}
+
+    .wrap{width:100%;max-width:820px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(2,6,23,0.7);border:1px solid rgba(255,255,255,0.03)}
+
+    header{display:flex;align-items:center;gap:16px}
+
+    .logo{width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+
+    h1{margin:0;font-size:20px}
+
+    p.lead{margin:6px 0 18px;color:var(--muted)}
+
+    .card{background:var(--card);padding:18px;border-radius:10px;border:1px solid var(--glass);margin-top:12px}
+
+    .question{font-size:18px;margin:8px 0}
+
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+
+    button.opt{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;cursor:pointer;font-size:15px}
+
+    button.opt:hover{transform:translateY(-3px)}
+
+    .meta{display:flex;align-items:center;justify-content:space-between;margin-top:12px;color:var(--muted);font-size:14px}
+
+    .controls{display:flex;gap:10px}
+
+    .btn{background:var(--accent);color:#042027;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+
+    .small{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:6px 8px}
+
+    .footer{margin-top:14px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;align-items:center}
+
+    .result{margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02)}
+
+    .hidden{display:none}
+
+    @media(max-width:560px){.options{grid-template-columns:1fr}}
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="wrap">
+
+    <header>
+
+      <div class="logo">TQ</div>
+
+      <div>
+
+        <h1>Trò chơi HÓC BỨA</h1>
+
+        <p class="lead">Tìm đáp án đúng nhất cho mỗi câu đố. Người tạo: <strong>Trung Quan</strong></p>
+
+      </div>
+
+    </header><div class="card" id="game">
+
+  <div id="status" class="meta">
+
+    <div>Điểm: <span id="score">0</span></div>
+
+    <div>Vòng: <span id="round">0</span>/<span id="total">0</span></div>
+
+  </div>
+
+  <div id="questionArea">
+
+    <div class="question" id="questionText">Nhấn BẮT ĐẦU để chơi!</div>
+
+    <div class="options" id="options"></div>
+
+  </div>
+
+  <div class="meta">
+
+    <div id="feedback" style="color:var(--muted)">Chọn 1 đáp án để trả lời.</div>
+
+    <div class="controls">
+
+      <button id="startBtn" class="btn">Bắt đầu</button>
+
+      <button id="nextBtn" class="small hidden">Câu tiếp</button>
+
+      <button id="hintBtn" class="small">Gợi ý (-1 điểm)</button>
+
+    </div>
+
+  </div>
+
+  <div class="result hidden" id="resultBox"></div>
+
+  <div class="footer">
+
+    <div>Trò chơi nhỏ bởi <strong>Trung Quan</strong></div>
+
+    <div style="font-size:12px;color:var(--muted)">Lưu file HTML và mở bằng trình duyệt để chơi. Chia sẻ cho bạn bè!</div>
+
+  </div>
+
+</div>
+
+<div style="margin-top:12px;color:var(--muted);font-size:13px">Mẹo: bạn có thể thêm câu đố bằng cách chỉnh mảng <code>QUESTIONS</code> trong mã.</div>
+
+  </div>  <script>
+
+    /* Trò chơi Hóc Búa - single-file
+
+       - Người tạo: Trung Quan
+
+       - Cách chơi: chọn đáp án đúng, dùng "Gợi ý" nếu cần
+
+    */
+
+    const QUESTIONS = [
+
+      {
+
+        q: "BẠN GAY BA MẸ BẠN CÓ BIẾT KHÔNG?",
+
+        options: ["không", "biết", "đã biết"],
+
+        a: 0,
+
+        hint: "Bạn thường thấy khi đào đất..."
+
+      },
+
+      {
+
+        q: "BẠN ĐÃ ĂN ** CHƯA?",
+
+        options: ["liếm rồi", "ăn rồi", "hít thôi"],
+
+        a: 0,
+
+        hint: "Sự kiện văn hóa thường tổ chức ở đây"
+
+      },
+
+      {
+
+        q: "con chó có mấy chân?",
+
+        options: ["0", "1", "2", "3"],
+
+        a: 0,
+
+        hint: "ĐÂY LÀ CÂU HỎI"
+
+      },
+
+      {
+
+        q: "1 ngày bạn ăn mấy bát cơm?",
+
+        options: ["24", "12", "36", "50"],
+
+        a: 0,
+
+        hint: "Mỗi quả cho ra 2 mảnh" 
+
+      },
+
+      {
+
+        q: "bạn ăn cơm với gì?",
+
+        options: ["****", "Gậy", "Quả bóng", "điện thoại"],
+
+        a: 0,
+
+        hint: "Một cam kết" 
+
+      }
+
+    ];
+
+    // State
+
+    let current = -1;
+
+    let score = 0;
+
+    let usedHint = false;
+
+    const total = QUESTIONS.length;
+
+    // Elements
+
+    const startBtn = document.getElementById('startBtn');
+
+    const nextBtn = document.getElementById('nextBtn');
+
+    const hintBtn = document.getElementById('hintBtn');
+
+    const questionText = document.getElementById('questionText');
+
+    const optionsEl = document.getElementById('options');
+
+    const feedback = document.getElementById('feedback');
+
+    const scoreEl = document.getElementById('score');
+
+    const roundEl = document.getElementById('round');
+
+    const totalEl = document.getElementById('total');
+
+    const resultBox = document.getElementById('resultBox');
+
+    totalEl.textContent = total;
+
+    function shuffle(a){
+
+      for(let i=a.length-1;i>0;i--){
+
+        const j = Math.floor(Math.random()*(i+1));
+
+        [a[i],a[j]]=[a[j],a[i]];
+
+      }
+
+      return a;
+
+    }
+
+    function startGame(){
+
+      score = 0;
+
+      current = -1;
+
+      scoreEl.textContent = score;
+
+      nextBtn.classList.add('hidden');
+
+      resultBox.classList.add('hidden');
+
+      startBtn.textContent = 'Bắt đầu lại';
+
+      usedHint = false;
+
+      shuffle(QUESTIONS);
+
+      nextQuestion();
+
+    }
+
+    function nextQuestion(){
+
+      current++;
+
+      if(current >= total){
+
+        endGame();
+
+        return;
+
+      }
+
+      roundEl.textContent = current+1;
+
+      renderQuestion(QUESTIONS[current]);
+
+      feedback.textContent = 'Chọn 1 đáp án để trả lời.';
+
+      nextBtn.classList.add('hidden');
+
+    }
+
+    function renderQuestion(item){
+
+      questionText.textContent = item.q;
+
+      optionsEl.innerHTML = '';
+
+      const opts = item.options.map((text, idx) => ({text, idx}));
+
+      // shuffle options so answers move
+
+      shuffle(opts);
+
+      opts.forEach(opt=>{
+
+        const btn = document.createElement('button');
+
+        btn.className = 'opt';
+
+        btn.textContent = opt.text;
+
+        btn.onclick = ()=>selectAnswer(opt.text, item, btn);
+
+        optionsEl.appendChild(btn);
+
+      });
+
+    }
+
+    function selectAnswer(selectedText, item, btnElement){
+
+      // disable all options
+
+      Array.from(optionsEl.children).forEach(b=>b.disabled=true);
+
+      // find index of original answer text
+
+      const correctText = item.options[item.a];
+
+      const isCorrect = (selectedText === correctText);
+
+      if(isCorrect){
+
+        score += 2; // correct gives 2 points
+
+        feedback.textContent = 'Chính xác! +2 điểm.';
+
+        feedback.style.color = '#8ef1d6';
+
+        btnElement.style.outline = '2px solid rgba(0,255,170,0.15)';
+
+      } else {
+
+        score -= 1; // penalty
+
+        feedback.textContent = `Sai. Đáp án đúng: "${correctText}". -10000 điểm vì cái tội ngu.`;
+
+        feedback.style.color = '#ffb4b4';
+
+        btnElement.style.outline = '2px solid rgba(255,80,80,0.12)';
+
+      }
+
+      scoreEl.textContent = score;
+
+      nextBtn.classList.remove('hidden');
+
+      // show explanation area briefly
+
+      resultBox.classList.remove('hidden');
+
+      resultBox.textContent = item.hint ? ('Gợi ý: ' + item.hint) : '';
+
+    }
+
+    function endGame(){
+
+      questionText.textContent = 'Kết thúc!';
+
+      optionsEl.innerHTML = '';
+
+      feedback.textContent = 'Bạn đã hoàn thành tất cả câu đố.';
+
+      resultBox.classList.remove('hidden');
+
+      resultBox.innerHTML = `<strong>Tổng điểm:</strong> ${score} điểm. <br>Chúc mừng!`;
+
+      nextBtn.classList.add('hidden');
+
+      startBtn.textContent = 'Chơi lại';
+
+    }
+
+    // Hint: cost 1 point
+
+    hintBtn.addEventListener('click', ()=>{
+
+      if(current < 0 || current >= total) return;
+
+      if(score <= -999) return; // safety
+
+      if(usedHint){
+
+        feedback.textContent = 'Bạn đã dùng gợi ý cho câu này.';
+
+        return;
+
+      }
+
+      score -= 1;
+
+      scoreEl.textContent = score;
+
+      usedHint = true;
+
+      const hint = QUESTIONS[current].hint || 'Không có gợi ý.';
+
+      resultBox.classList.remove('hidden');
+
+      resultBox.textContent = 'Gợi ý: ' + hint;
+
+      feedback.textContent = 'Bạn đã dùng gợi ý (-1 điểm).';
+
+    });
+
+    startBtn.addEventListener('click', ()=>{
+
+      startGame();
+
+    });
+
+    nextBtn.addEventListener('click', ()=>{
+
+      usedHint = false;
+
+      nextQuestion();
+
+    });
+
+    // Keyboard support: 1-4 choose option
+
+    document.addEventListener('keydown', (e)=>{
+
+      if(current < 0 || current >= total) return;
+
+      const k = e.key;
+
+      if(['1','2','3','4'].includes(k)){
+
+        const ix = parseInt(k)-1;
+
+        const btn = optionsEl.children[ix];
+
+        if(btn) btn.click();
+
+      }
+
+      if(k === 'Enter' && nextBtn && !nextBtn.classList.contains('hidden')){
+
+        nextBtn.click();
+
+      }
+
+    });
+
+    // Small safety: prevent negative runaway score
+
+    setInterval(()=>{
+
+      if(score < -999) score = -999;
+
+      scoreEl.textContent = score;
+
+    }, 2000);
+
+  </script></body>
+
+</html>
